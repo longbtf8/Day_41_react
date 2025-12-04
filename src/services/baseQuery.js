@@ -10,12 +10,13 @@ const baseQuery = async (args) => {
     if (args.body) config.data = args.body;
     if (args.headers) config.headers = args.headers;
   }
-
+  console.log(config);
   try {
     const response = await httpRequest(config);
-    return { data: response };
+    console.log(response);
+    return { response };
   } catch (error) {
-    console.log(error);
+    return error;
   }
 };
 export default baseQuery;
