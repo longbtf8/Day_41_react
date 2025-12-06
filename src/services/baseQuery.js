@@ -13,10 +13,9 @@ const baseQuery = async (args) => {
   console.log(config);
   try {
     const response = await httpRequest(config);
-    console.log(response);
-    return { response };
+    return response;
   } catch (error) {
-    return error;
+    return { error };
   }
 };
 export default baseQuery;
