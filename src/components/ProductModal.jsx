@@ -44,6 +44,24 @@ const ProductModal = ({ isOpen, onClose }) => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const dataToSend = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      price: formData.price,
+      discountPercentage: formData.discountPercentage,
+      rating: formData.rating,
+      stock: formData.stock,
+      brand: formData.brand,
+      sku: formData.sku,
+      weight: formData.weight,
+      minimumOrderQuantity: formData.minimumOrderQuantity,
+      thumbnail: formData.thumbnail,
+    };
+    if (formData.tags) {
+      dataToSend.tags = formData.tags.split(",").map((tag) => tag.trim());
+    }
+    console.log("Data gửi lên:", dataToSend);
     try {
       await addProduct(formData).unwrap();
       alert("Thêm thành công");
