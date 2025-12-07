@@ -5,10 +5,13 @@ const baseQuery = async (args) => {
   const config = {
     url: isObject ? args.url : args,
     method: isObject ? args.method : "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
   };
   if (isObject) {
     if (args.body) config.data = args.body;
-    if (args.headers) config.headers = args.headers;
+    if (args.headers) config.headers = { ...config.headers, ...args.headers };
   }
   console.log(config);
   try {
