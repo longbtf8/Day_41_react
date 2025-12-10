@@ -39,7 +39,7 @@ const ProductModal = ({ isOpen, onClose }) => {
     minimumOrderQuantity: "",
     thumbnail: "",
   });
-  const [addProduct, { isLoading }] = useAddProductMutation();
+  const [addProduct] = useAddProductMutation();
   const [errors, setErrors] = useState({});
   const handleChange = (e) => {
     setFormData({
