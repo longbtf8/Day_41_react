@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { useAddProductMutation } from "../services/product";
+import { useEffect, useState } from "react";
+import {
+  useAddProductMutation,
+  useUpdateProductMutation,
+} from "../services/product";
 
 const InputProduct = ({ label, value, name, onChange, error }) => {
   return (
@@ -22,94 +25,130 @@ const InputProduct = ({ label, value, name, onChange, error }) => {
     </div>
   );
 };
+const initFormData = {
+  title: "",
+  description: "",
+  category: "",
+  price: "",
+  discountPercentage: "",
+  rating: "",
+  stock: "",
+  tags: "",
+  brand: "",
+  sku: "",
+  weight: "",
+  minimumOrderQuantity: "",
+  thumbnail: "",
+};
 
-const ProductModal = ({ isOpen, onClose }) => {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    category: "",
-    price: "",
-    discountPercentage: "",
-    rating: "",
-    stock: "",
-    tags: "",
-    brand: "",
-    sku: "",
-    weight: "",
-    minimumOrderQuantity: "",
-    thumbnail: "",
-  });
+const ProductModal = ({ isOpen, onClose, product = null }) => {
   const [addProduct] = useAddProductMutation();
   const [errors, setErrors] = useState({});
+  const getInitialFormData = (product) => {
+    if (product) {
+      return {
+        title: product.title || "",
+        description: product.description || "",
+        category: product.category || "",
+        price: product.price || "",
+        discountPercentage: product.discountPercentage || "",
+        rating: product.rating || "",
+        stock: product.stock || "",
+        tags: product.tags || "",
+        brand: product.brand || "",
+        sku: product.sku || "",
+        weight: product.weight || "",
+        minimumOrderQuantity: product.minimumOrderQuantity || "",
+        thumbnail: product.thumbnail || "",
+      };
+    }
+    return initFormData;
+  };
+  const [formData, setFormData] = useState(() => getInitialFormData(product));
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
+
+  //edit
+  const isEditMode = !!product;
+  const [updateProduct] = useUpdateProductMutation();
+  useEffect(() => {
+    if (product) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFormData(getInitialFormData(product));
+      setErrors({}); // Reset lỗi mỗi khi mở modal
+    } else {
+      setFormData(initFormData);
+    }
+  }, [product]);
+
   //   validate
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.title.trim()) {
+    if (!formData.title) {
       newErrors.title = "Vui lòng nhập tên sản phẩm";
     }
 
-    if (!formData.price.trim()) {
+    if (!formData.price) {
       newErrors.price = "Vui lòng nhập giá";
     } else if (isNaN(formData.price)) {
       newErrors.price = "Giá phải là số";
     }
 
-    if (!formData.description.trim()) {
+    if (!formData.description) {
       newErrors.description = "Vui lòng nhập mô tả";
     }
 
-    if (!formData.category.trim()) {
+    if (!formData.category) {
       newErrors.category = "Vui lòng nhập danh mục";
     }
 
-    if (!formData.thumbnail.trim()) {
+    if (!formData.thumbnail) {
       newErrors.thumbnail = "Vui lòng nhập link hình ảnh";
     }
 
-    if (!formData.discountPercentage.trim()) {
+    if (!formData.discountPercentage) {
       newErrors.discountPercentage = "Vui lòng nhập discount percentage";
     } else if (isNaN(formData.discountPercentage)) {
       newErrors.discountPercentage = "Discount percentage phải là số";
     }
 
-    if (!formData.rating.trim()) {
+    if (!formData.rating) {
       newErrors.rating = "Vui lòng nhập rating";
     } else if (isNaN(formData.rating)) {
       newErrors.rating = "Rating phải là số";
     }
 
-    if (!formData.stock.trim()) {
+    if (!formData.stock) {
       newErrors.stock = "Vui lòng nhập stock";
     } else if (isNaN(formData.stock)) {
       newErrors.stock = "Stock phải là số";
     }
 
-    if (!formData.tags.trim()) {
+    if (!formData.tags) {
       newErrors.tags = "Vui lòng nhập tags";
     }
 
-    if (!formData.brand.trim()) {
+    if (!formData.brand) {
       newErrors.brand = "Vui lòng nhập brand";
     }
 
-    if (!formData.sku.trim()) {
+    if (!formData.sku) {
       newErrors.sku = "Vui lòng nhập SKU";
     }
 
-    if (!formData.weight.trim()) {
+    if (!formData.weight) {
       newErrors.weight = "Vui lòng nhập weight";
     } else if (isNaN(formData.weight)) {
       newErrors.weight = "Weight phải là số";
     }
 
-    if (!formData.minimumOrderQuantity.trim()) {
+    if (!formData.minimumOrderQuantity) {
       newErrors.minimumOrderQuantity = "Vui lòng nhập minimum order quantity";
     } else if (isNaN(formData.minimumOrderQuantity)) {
       newErrors.minimumOrderQuantity = "Minimum order quantity phải là số";
@@ -141,18 +180,25 @@ const ProductModal = ({ isOpen, onClose }) => {
       minimumOrderQuantity: formData.minimumOrderQuantity,
       thumbnail: formData.thumbnail,
     };
-    if (formData.tags) {
+    if (formData.tags && !product) {
       dataToSend.tags = formData.tags.split(",").map((tag) => tag.trim());
     }
-    console.log("Data gửi lên:", dataToSend);
-    try {
-      await addProduct(dataToSend).unwrap();
-      alert("Thêm thành công");
-      setErrors({});
 
+    try {
+      if (isEditMode) {
+        await updateProduct({ id: product.id, ...dataToSend });
+        alert("Update thành công");
+      } else {
+        await addProduct(dataToSend).unwrap();
+        alert("Thêm thành công");
+      }
+      setErrors({});
+      setFormData(initFormData);
       onClose();
     } catch (error) {
-      alert("Lỗi addProduct", error);
+      console.error("Lỗi:", error);
+
+      alert(isEditMode ? "Lỗi khi cập nhật sản phẩm" : "Lỗi khi thêm sản phẩm");
     }
   };
 
